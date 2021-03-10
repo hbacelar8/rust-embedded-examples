@@ -1,6 +1,6 @@
 // src/main.rs
 
-// This project is a simple echo from UART2 using the `stm32f1xx-hal` crate.
+// This project is a simple echo from UART2 using the `stm32f1xx-hal` crate
 
 // std and main are not available for bare metal software
 #![no_std]

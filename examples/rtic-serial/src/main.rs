@@ -1,6 +1,6 @@
 // src/main.rs
 
-// This example show how to use the Real-Time Interrupt-driven Concurrency (RTIC) framework to handle UART2 interruptions and control the board LED.
+// This example show how to use the Real-Time Interrupt-driven Concurrency (RTIC) framework to handle UART2 interruptions and control the board LED
 
 // std and main are not available for bare metal software
 #![no_std]

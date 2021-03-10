@@ -1,6 +1,6 @@
 // src/main.rs
 
-// Blinks the NUCLEO-F103RB board LED connected to pin 5 on Port A.
+// Blinks the NUCLEO-F103RB board LED connected to pin 5 on Port A
 
 // std and main are not available for bare metal software
 #![no_std]
@@ -30,7 +30,7 @@ fn main() -> ! {
     // Freeze clocks
     let clocks = rcc.cfgr.freeze(&mut flash.acr);
 
-    /* Set up systick delay */
+    // Set up systick delay
     let mut delay = Delay::new(cp.SYST, clocks);
 
     loop {

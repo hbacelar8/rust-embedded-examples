@@ -1,6 +1,6 @@
 // src/main.rs
 
-// This example shows how to access a register mapped peripheral using the crate `volatile-register`.
+// This example shows how to access a register mapped peripheral using the crate `volatile-register`
 
 // std and main are not available for bare metal software
 #![no_std]
