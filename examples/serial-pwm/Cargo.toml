@@ -1,0 +1,24 @@
+[package]
+name = "blink"
+version = "0.1.0"
+authors = ["Henrique Bacelar <bacelarhenrique8@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[profile.release]
+opt-level = 'z' # turn on maximum optimizations. We only have 64kB
+lto = true      # Link-time-optimizations for further size reduction
+
+[dependencies]
+cortex-m = "^0.6.3"         # Access to the generic ARM peripherals
+cortex-m-rt = "^0.6.12"     # Startup code for the ARM Core
+embedded-hal = "^0.2.4"     # Access to generic embedded functions (`set_high`)
+panic-halt = "^0.2.0"       # Panic handler
+nb = "1.0.0"                # Minimal and reusable non-blocking I/O layer
+
+# Access to the STM32F103 HAL.
+[dependencies.stm32f1xx-hal]
+# STM32F103RB contains a 128kB flash variant which is called "medium density"
+features = ["stm32f103", "rt", "medium"]
+version = "^0.6.1"
