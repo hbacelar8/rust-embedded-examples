@@ -16,6 +16,7 @@ cortex-m-rt = "^0.6.12"     # Startup code for the ARM Core
 embedded-hal = "^0.2.4"     # Access to generic embedded functions (`set_high`)
 panic-halt = "^0.2.0"       # Panic handler
 nb = "1.0.0"                # Minimal and reusable non-blocking I/O layer
+heapless = "0.6.0"          # static friendly data structures that don't require dynamic memory allocation
 
 # Access to the STM32F103 HAL.
 [dependencies.stm32f1xx-hal]
