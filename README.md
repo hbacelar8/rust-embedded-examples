@@ -12,3 +12,19 @@ The examples can be found in the `examples` folder. Each example is a project it
 - `blink`: A simple blink project using the `stm32f1xx-hal` crate.
 - `serial`: A simple project using the UART2 to echo bytes with the `stm32f1xx-hal` crate.
 - `rtic-serial`: Simple interrupt-driven serial communication using the RTIC framework.
+
+## References
+
+[The Embedded Rust Book](https://docs.rust-embedded.org/book/intro/index.html) \
+[Real-Time Interrupt-driven Concurrency](https://rtic.rs/0.5/book/en/preface.html) \
+[Rust on STM32: Getting started](https://jonathanklimt.de/electronics/programming/embedded-rust/rust-on-stm32-2/)
+
+### Related Projects
+
+[stm32f1xx_hal](https://github.com/stm32-rs/stm32f1xx-hal) \
+[cortex-m-rtic](https://github.com/rtic-rs/cortex-m-rtic)
+
+## Author
+
+Henrique Bacelar \
+[LinkedIn](https://www.linkedin.com/in/bacelarhenrique/)
