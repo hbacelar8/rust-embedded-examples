@@ -10,7 +10,7 @@ The commands are separated by peripheral. The `App` byte distinguishes between L
 | Command             | App  | Cmd  | Length | Payload     |
 |---------------------|------|------|--------|-------------|
 | Send Command to LCD | 0xA0 | 0x01 | 0x01   | LCD Command |
-| Send Data to LCD    | 0xA0 | 0x01 | 0x0X   | Data        |
+| Send Data to LCD    | 0xA0 | 0x02 | 0x0X   | Data        |
 
 ### LED Commands
 | Command           | App  | Cmd  | Length | Payload |
