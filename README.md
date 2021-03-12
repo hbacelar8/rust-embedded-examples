@@ -11,7 +11,9 @@ The examples can be found in the `examples` folder. Each example is a project it
 - `peripheral-access`: A project showing how to access a peripheral without a HAL library.
 - `blink`: A simple blink project using the `stm32f1xx-hal` crate.
 - `serial`: A simple project using the UART2 to echo bytes with the `stm32f1xx-hal` crate.
+- `serial-pwm`: This project handles a simple serial communication protocol for receiving commands in order to control a RGB LED using PWM and a buzzer.
 - `rtic-serial`: Simple interrupt-driven serial communication using the RTIC framework.
+- `rtic`: This is a more complete example of the RTIC implementing a UART protocol for receiving commands from the serial communication and thus controlling an LCD display, a RGB LED and a the board LCD blink delay.
 
 ## References
 
