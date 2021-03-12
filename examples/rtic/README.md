@@ -1,7 +1,7 @@
 # RTIC Complete Example
 This is a more complete example of the Real-Time Interrupt-driven Concurrency (RTIC) framework.
 
-It implements a UART protocol for receiving commands from the serial communication and thus controlling an LCD display, a RGB LED and a the board LCD blink delay.
+It implements a UART protocol for receiving commands from the serial communication and thus controlling an LCD display, a RGB LED and a the board LED blink frequency.
 
 ## Commands
 The commands are separated by peripheral. The `App` byte distinguishes between LCD, LED and RGB commands. The `Cmd` byte defines the different commands of the same category. Finally, the `Length` byte indicates the number of bytes to arrive as payload.
