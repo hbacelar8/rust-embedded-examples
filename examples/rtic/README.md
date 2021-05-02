@@ -16,6 +16,8 @@ The commands are separated by peripheral. The `App` byte distinguishes between L
 | Command           | App  | Cmd  | Length | Payload |
 |-------------------|------|------|--------|---------|
 | Set LED Frequency | 0xB0 | 0x01 | 0x01   | Freq    |
+| Turn LED Off      | 0xB0 | 0x02 | 0x01   | 0x01    |
+| Turn LED On       | 0xB0 | 0x03 | 0x01   | 0x01    |
 
 ### RGB Commands
 | Command         | App  | Cmd  | Length | Payload   |
