@@ -7,6 +7,8 @@ A collection of embedded Rust examples using the `stm32f1xx-hal` crate and the R
 
 The examples can be found in the `examples` folder. Each example is a project itself, meaning they can be run separately.
 
+The platform used for all examples is the NUCLEO-F103RB which contains a STM32F103RB MCU.
+
 ## Examples List
 - `blink-no-hal`: A blink project showing how to access a peripheral without using the HAL crate;
 - `blink-hal`: A blink project using the `stm32f1xx-hal` crate;
