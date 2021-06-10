@@ -1,5 +1,5 @@
-## Serial Blocking
-This project is a simple echo from UART2 using the `stm32f1xx-hal` crate.
+## Serial Echo
+This project implements a serial echo on USART2.
 
 ## Building
 ```bash

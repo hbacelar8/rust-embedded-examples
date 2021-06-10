@@ -1,6 +1,6 @@
-# A Simple Blink Project
+# Blink with HAL
 
-Blinks the NUCLEO-F103RB board LED connected to pin 5 on Port A.
+Blinks the NUCLEO-F103RB board LED connected to pin 5 on Port A using the `stm32f1xx-hal` crate.
 
 ## Building
 ```bash

@@ -1,6 +1,6 @@
-# Serial PWM Polling
+# Serial PWM Interrupt
 
-This project handles a serial communication protocol by polling the USART2 in order to control a RGB LED and a buzzer using PWM.
+This project handles a serial communication protocol through serial interruptions in order to control a RGB LED and a buzzer using PWM.
 
 ## Wiring
 | Pin | Function  |
