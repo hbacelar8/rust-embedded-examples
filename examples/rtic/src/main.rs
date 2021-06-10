@@ -50,7 +50,7 @@ const APP: () = {
         lcd: &'static mut LCD,
         led: gpioa::PA5<Output<PushPull>>,
 
-        rx_buffer: Vec<u8, heapless::consts::U16>,
+        rx_buffer: Vec<u8, heapless::consts::U32>,
 
         #[init(0)]
         byte_counter: u8,
@@ -136,7 +136,7 @@ const APP: () = {
         );
 
         // Create RX buffer
-        let rx_buffer: Vec<u8, heapless::consts::U16> = Vec::new();
+        let rx_buffer: Vec<u8, heapless::consts::U32> = Vec::new();
 
         // Enable RX interruption
         serial.listen(Event::Rxne);
@@ -174,6 +174,7 @@ const APP: () = {
         }
 
         cx.resources.timer_handler.clear_update_interrupt_flag();
+        // cx.spawn.uart_handler2().unwrap();
     }
 
     /// UART2 ISR
@@ -181,7 +182,7 @@ const APP: () = {
     fn USART2(c: USART2::Context) {
         // Read serial data register, automatic clearing RX interruption flag
         let received = c.resources.serial_handler.read().unwrap();
-        let rx_buffer: &mut Vec<u8, heapless::consts::U16> = c.resources.rx_buffer;
+        let rx_buffer: &mut Vec<u8, heapless::consts::U32> = c.resources.rx_buffer;
 
         if *c.resources.byte_counter < 3 {
             rx_buffer.push(received).unwrap();
@@ -201,7 +202,7 @@ const APP: () = {
     /// Handle commands received through UART
     #[task(resources = [lcd, led, timer_handler, pwm_handler, rx_buffer, led_freq])]
     fn uart_handler(c: uart_handler::Context) {
-        let rx_buffer: &mut Vec<u8, heapless::consts::U16> = c.resources.rx_buffer;
+        let rx_buffer: &mut Vec<u8, heapless::consts::U32> = c.resources.rx_buffer;
         let timer_handler: &mut CountDownTimer<TIM1> = c.resources.timer_handler;
         let pwm_handler: &mut Pwm<
             TIM4,
@@ -254,6 +255,18 @@ const APP: () = {
                     let new_freq = rx_buffer[3];
                     timer_handler.start((new_freq as u32).hz());
                     *c.resources.led_freq = new_freq;
+
+                    // Enable timer coutdown interruption
+                    timer_handler.listen(hal::timer::Event::Update);
+                }
+                0x02 => {
+                    // Unable timer coutdown interruption
+                    timer_handler.unlisten(hal::timer::Event::Update);
+                    c.resources.led.set_low().ok();
+                }
+                0x03 => {
+                    // Enable timer coutdown interruption
+                    timer_handler.listen(hal::timer::Event::Update);
                 }
                 _ => (),
             },
@@ -272,7 +285,14 @@ const APP: () = {
         rx_buffer.clear();
     }
 
+    // /// Handle commands received through UART
+    // #[task(priority = 2)]
+    // fn uart_handler2(_: uart_handler2::Context) {
+    //     let _i= 0;
+    // }
+
     extern "C" {
         fn TAMPER();
+    // fn EXTI1();
     }
 };
