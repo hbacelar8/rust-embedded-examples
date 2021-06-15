@@ -33,6 +33,14 @@ use stm32f1xx_hal::{
     timer::{Tim4NoRemap, Timer},
 };
 
+struct SerialStruct {
+    counter: u8,
+    app: u8,
+    cmd: u8,
+    len: u8,
+    data: Vec<u8, consts::U8>,
+}
+
 #[entry]
 fn main() -> ! {
     // Get access to device peripherals
@@ -85,41 +93,42 @@ fn main() -> ! {
         &mut rcc.apb1,
     );
 
-    // A buffer with 8 bytes of capacity
-    let mut buffer: Vec<u8, consts::U8> = Vec::new();
-
-    let mut app: u8 = 0;
-    let mut cmd: u8 = 0;
-    let mut len: u8 = 0;
-    let mut counter: u8 = 0;
+    // Initialize serial struct
+    let mut serial_struct = SerialStruct {
+        counter: 0,
+        app: 0,
+        cmd: 0,
+        len: 0,
+        data: Vec::new(),
+    };
 
     loop {
         // Poll RX
         let byte_received = block!(serial.read()).unwrap();
 
-        match counter {
+        match serial_struct.counter {
             0 => {
                 if byte_received == 0xA0 || byte_received == 0xB0 {
-                    app = byte_received;
-                    counter += 1;
+                    serial_struct.app = byte_received;
+                    serial_struct.counter += 1;
                 }
             }
             1 => {
-                cmd = byte_received;
-                counter += 1;
+                serial_struct.cmd = byte_received;
+                serial_struct.counter += 1;
             }
             2 => {
-                len = byte_received;
-                counter += 1;
+                serial_struct.len = byte_received;
+                serial_struct.counter += 1;
             }
             _ => {
-                buffer.push(byte_received).ok();
-                counter += 1;
+                serial_struct.data.push(byte_received).ok();
+                serial_struct.counter += 1;
 
-                if counter == len + 3 {
-                    counter = 0;
+                if serial_struct.counter == serial_struct.len + 3 {
+                    serial_struct.counter = 0;
 
-                    msg_handler(&mut pwm, &mut buffer, &app, &cmd);
+                    msg_handler(&mut pwm, &mut serial_struct);
                 }
             }
         }
@@ -139,44 +148,42 @@ fn msg_handler(
             PB9<Alternate<PushPull>>,
         ),
     >,
-    buffer: &mut Vec<u8, consts::U8>,
-    app: &u8,
-    cmd: &u8,
+    serial_struct: &mut SerialStruct,
 ) {
-    match app {
+    match serial_struct.app {
         0xA0 => {
             // Get max duty cycle and divide it by steps of 255 for the color range
             let step = pwm.get_max_duty() / 255;
 
-            match cmd {
+            match serial_struct.cmd {
                 0x00 => {
-                    let red = buffer[0];
-                    let green = buffer[1];
-                    let blue = buffer[2];
+                    let red = serial_struct.data[0];
+                    let green = serial_struct.data[1];
+                    let blue = serial_struct.data[2];
 
                     pwm.set_duty(Channel::C1, step * red as u16);
                     pwm.set_duty(Channel::C2, step * green as u16);
                     pwm.set_duty(Channel::C3, step * blue as u16);
                 }
                 0x01 => {
-                    let red = buffer[0];
+                    let red = serial_struct.data[0];
 
                     pwm.set_duty(Channel::C1, step * red as u16);
                 }
                 0x02 => {
-                    let green = buffer[0];
+                    let green = serial_struct.data[0];
 
                     pwm.set_duty(Channel::C2, step * green as u16);
                 }
                 0x03 => {
-                    let blue = buffer[0];
+                    let blue = serial_struct.data[0];
 
                     pwm.set_duty(Channel::C3, step * blue as u16);
                 }
                 _ => {}
             }
         }
-        0xB0 => match cmd {
+        0xB0 => match serial_struct.cmd {
             0x01 => {
                 let max = pwm.get_max_duty();
 
@@ -188,5 +195,5 @@ fn msg_handler(
         _ => {}
     }
 
-    buffer.clear();
+    serial_struct.data.clear();
 }

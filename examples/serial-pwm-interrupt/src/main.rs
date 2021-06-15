@@ -14,9 +14,9 @@
 #![no_std]
 #![no_main]
 
-use panic_halt as _;
 use cortex_m_rt::entry;
 use heapless::{consts, Vec};
+use panic_halt as _;
 use stm32f1xx_hal::{
     gpio::{
         gpioa::{PA2, PA3},
@@ -30,6 +30,15 @@ use stm32f1xx_hal::{
     time::U32Ext,
     timer::{Tim4NoRemap, Timer},
 };
+
+struct SerialStruct {
+    counter: u8,
+    app: u8,
+    cmd: u8,
+    len: u8,
+    data: Vec<u8, consts::U8>,
+    buffer_free: bool,
+}
 
 // Global static variables
 static mut SERIAL: Option<Serial<USART2, (PA2<Alternate<PushPull>>, PA3<Input<Floating>>)>> = None;
@@ -46,11 +55,7 @@ static mut PWM: Option<
         ),
     >,
 > = None;
-static mut BUFFER: Option<Vec<u8, consts::U8>> = None;
-static mut COUNTER: u8 = 0;
-static mut APP: u8 = 0;
-static mut CMD: u8 = 0;
-static mut LEN: u8 = 0;
+static mut SERIAL_STRUCT: Option<SerialStruct> = None;
 
 #[entry]
 fn main() -> ! {
@@ -104,8 +109,15 @@ fn main() -> ! {
         &mut rcc.apb1,
     );
 
-    // A buffer with 8 bytes of capacity
-    let buffer: Vec<u8, heapless::consts::U8> = Vec::new();
+    // Initialize serial struct
+    let serial_struct = SerialStruct {
+        counter: 0,
+        app: 0,
+        cmd: 0,
+        len: 0,
+        data: Vec::new(),
+        buffer_free: true,
+    };
 
     // Enable USART2 interruptions
     unsafe {
@@ -119,7 +131,7 @@ fn main() -> ! {
     unsafe {
         SERIAL = Some(serial);
         PWM = Some(pwm);
-        BUFFER = Some(buffer);
+        SERIAL_STRUCT = Some(serial_struct);
     }
 
     // Do nothing; wait for interruptions
@@ -131,42 +143,41 @@ fn main() -> ! {
 fn USART2() {
     // Get local access to static global variables
     let serial = unsafe { SERIAL.as_mut().unwrap() };
-    let buffer = unsafe { BUFFER.as_mut().unwrap() };
-    let counter = unsafe { &mut COUNTER };
-    let app = unsafe { &mut APP };
-    let cmd = unsafe { &mut CMD };
-    let len = unsafe { &mut LEN };
+    let serial_struct = unsafe { SERIAL_STRUCT.as_mut().unwrap() };
 
     // Read received byte, cleaning RX flag
     let byte_received = serial.read().unwrap();
 
-    match *counter {
-        0 => {
-            if byte_received == 0xA0 || byte_received == 0xB0 {
-                *app = byte_received;
-                *counter += 1;
+    if serial_struct.buffer_free {
+        match serial_struct.counter {
+            0 => {
+                if byte_received == 0xA0 || byte_received == 0xB0 {
+                    serial_struct.app = byte_received;
+                    serial_struct.counter += 1;
+                }
             }
-        }
-        1 => {
-            *cmd = byte_received;
-            *counter += 1;
-        }
-        2 => {
-            *len = byte_received;
-            *counter += 1;
-
-            if *len == 0 {
-                *counter = 0;
-                msg_handler();
+            1 => {
+                serial_struct.cmd = byte_received;
+                serial_struct.counter += 1;
             }
-        }
-        _ => {
-            buffer.push(byte_received).ok();
-            *counter += 1;
+            2 => {
+                serial_struct.len = byte_received;
+                serial_struct.counter += 1;
 
-            if *counter == *len + 3 {
-                *counter = 0;
-                msg_handler();
+                if serial_struct.len == 0 {
+                    serial_struct.counter = 0;
+                    msg_handler();
+                }
+            }
+            _ => {
+                serial_struct.data.push(byte_received).ok();
+                serial_struct.counter += 1;
+
+                if serial_struct.counter == serial_struct.len + 3 {
+                    serial_struct.counter = 0;
+                    serial_struct.buffer_free = false;
+                    msg_handler();
+                }
             }
         }
     }
@@ -176,44 +187,42 @@ fn USART2() {
 fn msg_handler() {
     // Get local access to static global variables
     let pwm = unsafe { PWM.as_mut().unwrap() };
-    let buffer = unsafe { BUFFER.as_mut().unwrap() };
-    let app = unsafe { APP };
-    let cmd = unsafe { CMD };
+    let serial_struct = unsafe { SERIAL_STRUCT.as_mut().unwrap() };
 
-    match app {
+    match serial_struct.app {
         0xA0 => {
             // Get max duty cycle and divide it by steps of 255 for the color range
             let step = pwm.get_max_duty() / 255;
 
-            match cmd {
+            match serial_struct.cmd {
                 0x00 => {
-                    let red = buffer[0];
-                    let green = buffer[1];
-                    let blue = buffer[2];
+                    let red = serial_struct.data[0];
+                    let green = serial_struct.data[1];
+                    let blue = serial_struct.data[2];
 
                     pwm.set_duty(Channel::C1, step * red as u16);
                     pwm.set_duty(Channel::C2, step * green as u16);
                     pwm.set_duty(Channel::C3, step * blue as u16);
                 }
                 0x01 => {
-                    let red = buffer[0];
+                    let red = serial_struct.data[0];
 
                     pwm.set_duty(Channel::C1, step * red as u16);
                 }
                 0x02 => {
-                    let green = buffer[0];
+                    let green = serial_struct.data[0];
 
                     pwm.set_duty(Channel::C2, step * green as u16);
                 }
                 0x03 => {
-                    let blue = buffer[0];
+                    let blue = serial_struct.data[0];
 
                     pwm.set_duty(Channel::C3, step * blue as u16);
                 }
                 _ => {}
             }
         }
-        0xB0 => match cmd {
+        0xB0 => match serial_struct.cmd {
             0x01 => {
                 let max = pwm.get_max_duty();
 
@@ -225,5 +234,6 @@ fn msg_handler() {
         _ => {}
     }
 
-    buffer.clear();
+    serial_struct.data.clear();
+    serial_struct.buffer_free = true;
 }
