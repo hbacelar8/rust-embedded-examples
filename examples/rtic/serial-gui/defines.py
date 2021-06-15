@@ -1,12 +1,14 @@
 class APP:
-    LCD = 0xA0
+    RGB = 0xA0
     LED = 0xB0
-    RGB = 0xC0
+    LCD = 0xC0
 
 
-class LCD_CMD:
-    SEND_CMD = 0x01
-    SEND_DATA = 0x02
+class RGB_CMD:
+    SET_COLORS = 0x00
+    SET_RED = 0x01
+    SET_GREEN = 0x02
+    SET_BLUE = 0x03
 
 
 class LED_CMD:
@@ -15,9 +17,6 @@ class LED_CMD:
     LED_ON = 0x03
 
 
-class RGB_CMD:
-    OFF = 0x01
-    FULL = 0x01
-    SET_BLUE = 0x02
-    SET_GREEN = 0x03
-    SET_RED = 0x04
+class LCD_CMD:
+    SEND_CMD = 0x01
+    SEND_DATA = 0x02

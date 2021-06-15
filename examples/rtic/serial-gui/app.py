@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter.constants import CENTER, E, NE, NW, RIGHT, SE, SW, W
+from tkinter.constants import CENTER, E, N, NE, NW, RIGHT, SE, SW, W
 from uart import UART
 from defines import *
 
@@ -24,7 +24,7 @@ class App:
         self.create_rgb_box()
         self.create_lcd_box()
 
-    def send(self, app: int, cmd: int, payload) -> None:
+    def send(self, app: int, cmd: int, payload=0) -> None:
         """Sends command through UART instance.
 
         Args:
@@ -37,14 +37,17 @@ class App:
         packet.append(app)
         packet.append(cmd)
 
-        if type(payload) == int:
-            packet.append(0x01)
-            packet.append(payload)
+        if type(payload) == list:
+            packet.append(len(payload))
+            packet.extend(payload)
         elif type(payload) == str:
             packet.append(len(payload))
 
             for l in payload:
                 packet.append(int(l.encode('utf-8').hex(), 16))
+        elif type(payload) == int:
+            packet.append(0x01)
+            packet.append(payload)
 
         try:
             self.uart.write(packet)
@@ -85,13 +88,13 @@ class App:
         """Button callback function to turn LED off.
         """
 
-        self.send(APP.LED, LED_CMD.LED_ON, 0x01)
+        self.send(APP.LED, LED_CMD.LED_ON)
 
     def turn_led_off(self) -> None:
         """Button callback function to turn LED off.
         """
 
-        self.send(APP.LED, LED_CMD.LED_OFF, 0x01)
+        self.send(APP.LED, LED_CMD.LED_OFF)
 
     def set_led_freq(self) -> None:
         """Button callback function to set LED frequency.
@@ -141,18 +144,6 @@ class App:
         self.set_freq_button.place(
             relwidth=0.25, relheight=0.3, relx=0.6, rely=0.8, anchor=W)
 
-    def set_rgb_full(self):
-        """Button callback function to set RGB to full value.
-        """
-
-        self.send(APP.RGB, RGB_CMD.FULL, 2)
-
-    def set_rgb_off(self):
-        """Button callback function to turn RGB off.
-        """
-
-        self.send(APP.RGB, RGB_CMD.OFF, 1)
-
     def set_rgb_blue_val(self):
         """Button callback function to set RGB blue value.
         """
@@ -174,6 +165,16 @@ class App:
         val = int(self.red_spinbox.get())
         self.send(APP.RGB, RGB_CMD.SET_RED, val)
 
+    def set_rgb_all_colors(self):
+        """Button callback function to set all RGB colors
+        """
+
+        red_val = int(self.red_spinbox.get())
+        green_val = int(self.green_spinbox.get())
+        blue_val = int(self.blue_spinbox.get())
+
+        self.send(APP.RGB, RGB_CMD.SET_COLORS, [red_val, green_val, blue_val])
+
     def create_rgb_box(self):
         """Creates RGB section.
         """
@@ -190,45 +191,40 @@ class App:
         self.rgb_title_label.place(relx=0.5, rely=0.1, anchor=CENTER)
 
         # RGB Buttons
-        self.rgb_full_button = tk.Button(
-            self.rgb_frame, text="FULL", command=self.set_rgb_full)
-        self.rgb_full_button.place(
-            relwidth=0.25, relheight=0.2, relx=0.05, rely=0.3, anchor=NW)
-
-        self.rgb_off_button = tk.Button(
-            self.rgb_frame, text="OFF", command=self.set_rgb_off)
-        self.rgb_off_button.place(
-            relwidth=0.25, relheight=0.2, relx=0.05, rely=0.8, anchor=SW)
-
         self.set_red_value = tk.Button(
             self.rgb_frame, text="Set Red", command=self.set_rgb_red_val)
         self.set_red_value.place(
-            relwidth=0.25, relheight=0.2, relx=0.72, rely=0.25, anchor=NE)
+            relwidth=0.25, relheight=0.2, relx=0.10, rely=0.25, anchor=NW)
 
         self.set_green_value = tk.Button(
             self.rgb_frame, text="Set Green", command=self.set_rgb_green_val)
         self.set_green_value.place(
-            relwidth=0.25, relheight=0.2, relx=0.72, rely=0.6, anchor=E)
+            relwidth=0.25, relheight=0.2, relx=0.10, rely=0.6, anchor=W)
 
         self.set_blue_value = tk.Button(
             self.rgb_frame, text="Set Blue", command=self.set_rgb_blue_val)
         self.set_blue_value.place(
-            relwidth=0.25, relheight=0.2, relx=0.72, rely=0.95, anchor=SE)
+            relwidth=0.25, relheight=0.2, relx=0.10, rely=0.95, anchor=SW)
+
+        self.set_blue_value = tk.Button(
+            self.rgb_frame, text="Set All Colors", command=self.set_rgb_all_colors)
+        self.set_blue_value.place(
+            relwidth=0.3, relheight=0.2, relx=0.95, rely=0.6, anchor=E)
 
         self.red_spinbox = tk.Spinbox(
             self.rgb_frame, justify=CENTER, from_=0, to=254)
         self.red_spinbox.place(
-            relwidth=0.2, relheight=0.2, relx=0.95, rely=0.25, anchor=NE)
+            relwidth=0.2, relheight=0.2, relx=0.5, rely=0.25, anchor=N)
 
         self.green_spinbox = tk.Spinbox(
             self.rgb_frame, justify=CENTER, from_=0, to=254)
         self.green_spinbox.place(
-            relwidth=0.2, relheight=0.2, relx=0.95, rely=0.6, anchor=E)
+            relwidth=0.2, relheight=0.2, relx=0.605, rely=0.6, anchor=E)
 
         self.blue_spinbox = tk.Spinbox(
             self.rgb_frame, justify=CENTER, from_=0, to=254)
         self.blue_spinbox.place(
-            relwidth=0.2, relheight=0.2, relx=0.95, rely=0.95, anchor=SE)
+            relwidth=0.2, relheight=0.2, relx=0.605, rely=0.95, anchor=SE)
 
     def send_lcd_cmd(self) -> None:
         """Button callback function to send command to LCD.
@@ -247,8 +243,8 @@ class App:
 
         data = self.lcd_data_entry.get()
 
-        if len(data) > 29:
-            data = data[:29]
+        if len(data) > 32:
+            data = data[:32]
 
         if len(data) == 0:
             data = ' '
