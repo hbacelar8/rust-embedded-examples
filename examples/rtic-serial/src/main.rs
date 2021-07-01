@@ -84,6 +84,7 @@ const APP: () = {
 
         // Read serial data register, automatic clearing RX interruption flag
         let received = serial.read().unwrap();
+        serial.write(received).ok();
 
         // Control the board LED
         if received == b's' {
